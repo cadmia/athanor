@@ -3,6 +3,7 @@ const nunjucks = require('nunjucks');
 const WebSocket = require("ws");
 const path = require('path');
 const fs = require('fs');
+const taskrunner = require('./taskrunner');
 
 const injectWSCode = (code) => {
   const wsport = global.athanor.wsport;
@@ -13,9 +14,13 @@ const injectWSCode = (code) => {
       var data = JSON.parse(event.data);
       if (
             (data.type === "asset_changed") ||
-            (data.type === "template_changed" && (window.location.pathname === "/" || window.location.pathname === "/" + data.payload || data.payload.indexOf("_") === 0 || data.payload.indexOf("/_") !== -1))
+            (data.type === "template_changed" && (window.location.pathname === "/" + data.payload || data.payload.indexOf("_") === 0 || data.payload.indexOf("/_") !== -1))
       ) {
         window.location.reload(true);
+      }
+      else if (data.type === "template_changed" && window.location.pathname === "/")
+      {
+        window.location = "/";
       }
 
     }
@@ -86,7 +91,14 @@ module.exports = () => {
 
   app.get('/', (req, res) => {
     let contents = fs.readFileSync(path.join(global.athanor.root, "inc", "dir.njk"));
-    res.send(injectWSCode(nunjucks.renderString(contents.toString(), { dirs: fs.readdirSync(path.join(global.athanor.root, global.athanor.templateDir)) })));
+    const cmd = req.query.cmd;
+    if (cmd) {
+      taskrunner.runTask(cmd);
+    }
+    res.send(injectWSCode(nunjucks.renderString(contents.toString(), {
+      dirs: fs.readdirSync(path.join(global.athanor.root, global.athanor.templateDir)),
+      cmds: (global.athanor.config.tasks ? Object.keys(global.athanor.config.tasks) : [])
+    })));
   });
 
   app.get('*', (req, res) => {

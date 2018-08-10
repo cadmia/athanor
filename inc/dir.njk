@@ -3,12 +3,25 @@
   <head>
   </head>
   <body>
-    {% for item in dirs %}
-      {% if not r/(^(.*\/)?(?=_))_/.test(item) %}
-        <div>
-          <a href="/{{ item }}">{{ item }}</a>
-        </div>
-      {% endif %}
-    {% endfor %}
+    <div style="display: flex">
+      <div style="flex: 1">
+        <h4>Pages</h4>
+        {% for item in dirs %}
+          {% if not r/(^(.*\/)?(?=_))_/.test(item) %}
+            <div>
+              <a href="/{{ item }}">{{ item }}</a>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <div style="flex: 1">
+        <h4>Tasks</h4>
+        {% for cmd in cmds %}
+          <div>
+            <a href="/?cmd={{ cmd }}">{{ cmd }}</a>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
   </body>
 </html>
