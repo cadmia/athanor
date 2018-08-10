@@ -22,6 +22,7 @@ Configuration is simple, but may seem a bit complex. This is a list of options.
 | watch              | array            | List of files/directories to watch for changes                  |
 | watch[].dir        | string/arr (req) | Directory (or path to file) to watch                            |
 | watch[].build      | string (req)     | Build command (see Build)                                       |
+| watch[].task       | string           | Task name, used in place of build.
 | watch[].files      | object           | Optional list of input=>output files                            |
 | watch[].livereload | boolean          | Enables livereload on builds                                    |
 | tasks              | object           | Container of build tasks to run                                 |
