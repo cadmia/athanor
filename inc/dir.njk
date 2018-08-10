@@ -4,9 +4,11 @@
   </head>
   <body>
     {% for item in dirs %}
-      <div>
-        <a href="/{{ item }}">{{ item }}</a>
-      </div>
+      {% if not r/(^(.*\/)?(?=_))_/.test(item) %}
+        <div>
+          <a href="/{{ item }}">{{ item }}</a>
+        </div>
+      {% endif %}
     {% endfor %}
   </body>
 </html>
