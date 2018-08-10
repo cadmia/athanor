@@ -8,6 +8,8 @@ const _ = require('lodash');
 const app = express();
 const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json')));
 const port = process.env.PORT || config.port || 9876;
+const templateDir = config.templateDir || "templates";
+const staticDir = config.staticDir || "static";
 const watch = config.watch;
 
 console.log(config);
@@ -22,7 +24,7 @@ const genFileWatcher = (dir, buildCmd, fileLinks) => {
     let cmd = buildCmd.replace(/\${changed}/, path.join(dir, filename));
     if (fileLinks) {
       for (var link in fileLinks) {
-        let lcmd = cmd.replace(/\${src}/, path.join(dir, link)).replace(/\${dest}/, path.join("static", fileLinks[link]));
+        let lcmd = cmd.replace(/\${src}/, path.join(dir, link)).replace(/\${dest}/, path.join(staticDir, fileLinks[link]));
         console.log(gen + "Running " + lcmd + "...");
         exec(lcmd, (err, stdout, stderr) => {
           if (stdout) console.log(stdout);
@@ -50,16 +52,16 @@ if (watch) {
   }
 }
 
-nunjucks.configure('templates', {
+nunjucks.configure(templateDir, {
   autoescape: true,
   noCache: true,
   express: app
 });
 
-app.use(express.static(path.join(__dirname, 'static')));
+app.use(express.static(path.join(__dirname, staticDir)));
 
 const handleRoute = (route, res) => {
-  route = path.join(__dirname, 'templates', route);
+  route = path.join(__dirname, templateDir, route);
   if (!fs.existsSync(route)) {
     var troute = route + ".html";
     if (!fs.existsSync(troute)) {
@@ -97,7 +99,7 @@ const handleRoute = (route, res) => {
 
 app.get('/', (req, res) => {
   let contents = fs.readFileSync(path.join(__dirname, "inc", "dir.njk"));
-  res.send(nunjucks.renderString(contents.toString(), { dirs: fs.readdirSync(path.join(__dirname, "templates")) }));
+  res.send(nunjucks.renderString(contents.toString(), { dirs: fs.readdirSync(path.join(__dirname, templateDir)) }));
 });
 
 app.get('*', (req, res) => {

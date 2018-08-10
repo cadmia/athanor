@@ -16,6 +16,8 @@ Configuration is simple, but may seem a bit complex. This is a list of options.
 | Name               | Type          | Description                                    |
 | ------------------ | ------------- | ---------------------------------------------- |
 | port               | int           | Port to run webserver on (default 9876)        |
+| staticDir          | string        | Directory to serve static files from/build to  |
+| templateDir        | string        | Directory to serve/search templates from       |
 | watch              | array         | List of files/directories to watch for changes |
 | watch[].dir        | string (req)  | Directory (or path to file) to watch           |
 | watch[].build      | string (req)  | Build command (see Build)                      |
