@@ -1,6 +1,8 @@
 # Athanor
 
-This is an environment for static prototyping. It is built using Nunjucks for templating, Express for serving, and whatever you feel like for asset compilation!
+This is an environment for static prototyping. Also a self-feeding furnace capable of providing constant, uniform heat.
+
+It is built using Nunjucks for templating, Express for serving, and whatever you feel like for asset compilation!
 
 ## Installation
 

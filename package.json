@@ -1,5 +1,5 @@
 {
-  "name": "static-prototype-env",
+  "name": "athanor",
   "version": "1.0.0",
   "description": "Environment for Static Prototyping",
   "main": "index.js",
