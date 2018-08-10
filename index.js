@@ -17,5 +17,18 @@ global.athanor.wsport = process.env.WSPORT || athanor.config.wsport || 42496;
 global.athanor.templateDir = athanor.config.templateDir || "templates";
 global.athanor.staticDir = athanor.config.staticDir || "static";
 
-watcher();
-webserver();
+const args = () => {
+  let arglist = process.argv;
+  do {
+    const item = arglist.shift();
+    if (item.indexOf("index") !== -1 || item.indexOf("athanor") !== -1 || item === "ath") break;
+  } while (arglist.length);
+
+  if (!arglist.length) arglist = ["watch", "main"];
+  for (let arg of arglist) {
+    if (arg === "watch") watcher();
+    if (arg === "main") webserver();
+  }
+};
+
+args();

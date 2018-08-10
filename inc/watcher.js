@@ -93,5 +93,7 @@ module.exports = () => {
     if (fileName.indexOf("~") !== -1) return;
     if (global.athanor.wss) global.athanor.wss.broadcast(JSON.stringify({ type: "template_changed", payload: fileName }));
   });
+
+  console.log("Watching for changes...");
 };
 
