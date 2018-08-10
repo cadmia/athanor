@@ -5,12 +5,17 @@ const path = require('path');
 const exec = require('child_process').exec;
 const _ = require('lodash');
 
+const readConfig = () => {
+  return JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json')));
+}
+
 const app = express();
-const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json')));
+var config = readConfig();
+var watchers = []; // Who watches the watchers? I do
+
 const port = process.env.PORT || config.port || 9876;
 const templateDir = config.templateDir || "templates";
 const staticDir = config.staticDir || "static";
-const watch = config.watch;
 
 console.log(config);
 
@@ -42,15 +47,34 @@ const genFileWatcher = (dir, buildCmd, fileLinks) => {
   };
 };
 
-if (watch) {
-  for (var watchdef of watch) {
-    let dir = watchdef.dir;
-    let build = watchdef.build;
-    let files = watchdef.files;
+const buildWatchStructure = () => {
+  const watch = config.watch;
 
-    fs.watch(path.join(__dirname, dir), { persistent: true, recursive: true }, _.throttle(genFileWatcher(dir, build, files), 1000));
+  // Remove old watchers
+  for (let watcher of watchers) {
+    watcher.close();
   }
-}
+  watchers = [];
+
+  // Build new watchers
+  if (watch) {
+    for (var watchdef of watch) {
+      let dir = watchdef.dir;
+      let build = watchdef.build;
+      let files = watchdef.files;
+
+      watchers.push(fs.watch(path.join(__dirname, dir), { persistent: true, recursive: true }, _.throttle(genFileWatcher(dir, build, files), 1000)));
+    }
+  }
+};
+
+buildWatchStructure();
+fs.watch(path.join(__dirname, "config.json"), { persistent: true }, _.throttle(() => {
+  config = readConfig();
+  if (!config) return;
+
+  buildWatchStructure();
+}, 1000));
 
 nunjucks.configure(templateDir, {
   autoescape: true,
