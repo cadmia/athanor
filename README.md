@@ -1,4 +1,4 @@
-#static-prototype-env
+# Athanor
 
 This is an environment for static prototyping. It is built using Nunjucks for templating, Express for serving, and whatever you feel like for asset compilation!
 
@@ -13,17 +13,23 @@ This is an environment for static prototyping. It is built using Nunjucks for te
 
 Configuration is simple, but may seem a bit complex. This is a list of options.
 
-| Name               | Type             | Description                                    |
-| ------------------ | ---------------- | ---------------------------------------------- |
-| port               | int              | Port to run webserver on (default 9876)        |
-| wsport             | int              | Port to run websocket server on (def 42496)    |
-| staticDir          | string           | Directory to serve static files from/build to  |
-| templateDir        | string           | Directory to serve/search templates from       |
-| watch              | array            | List of files/directories to watch for changes |
-| watch[].dir        | string/arr (req) | Directory (or path to file) to watch           |
-| watch[].build      | string (req)     | Build command (see Build)                      |
-| watch[].files      | object           | Optional list of input=>output files           |
-| watch[].livereload | boolean          | Enables livereload on builds                   |
+| Name               | Type             | Description                                                     |
+| ------------------ | ---------------- | --------------------------------------------------------------- |
+| port               | int              | Port to run webserver on (default 9876)                         |
+| wsport             | int              | Port to run websocket server on (def 42496)                     |
+| staticDir          | string           | Directory to serve static files from/build to                   |
+| templateDir        | string           | Directory to serve/search templates from                        |
+| watch              | array            | List of files/directories to watch for changes                  |
+| watch[].dir        | string/arr (req) | Directory (or path to file) to watch                            |
+| watch[].build      | string (req)     | Build command (see Build)                                       |
+| watch[].files      | object           | Optional list of input=>output files                            |
+| watch[].livereload | boolean          | Enables livereload on builds                                    |
+| tasks              | object           | Container of build tasks to run                                 |
+| tasks[name]        | string           | Name of task                                                    |
+| tasks[].cmd        | string/arr (req) | Command(s) to run.                                              |
+| tasks[].options    | object           | Process options. See https://nodejs.org/api/child_process.html  |
+| tasks[].args       | object           | Arguments to provide to the template runner as defaults.        |
+| tasks[].startup    | boolean          | Run this task on a standard startup                             |
 
 ### Build
 
