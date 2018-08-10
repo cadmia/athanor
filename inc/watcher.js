@@ -2,6 +2,7 @@ const fs = require('fs');
 const _ = require('lodash');
 const exec = require('child_process').exec;
 const path = require('path');
+const taskrunner = require('./taskrunner');
 
 var watchers = []; // Who watches the watchers? I do
 
@@ -17,7 +18,9 @@ const genFileWatcher = (dir, cfg) => {
     const fileChanged = path.relative(process.cwd(), filename);
     const gen = "[" + dir.toUpperCase() + "]: ";
     console.log(gen + "File " + fileChanged + " changed (" + eventType + ").");
-    let cmd = _.template(buildCmd);
+    let cmd = buildCmd ? _.template(buildCmd) : cfg.task;
+    let isTask = !buildCmd;
+    if (!cmd) return;
     let args = {
       changed: filename,
       dir: dir,
@@ -28,27 +31,36 @@ const genFileWatcher = (dir, cfg) => {
     if (fileLinks) {
       for (var link in fileLinks) {
         let targs = Object.assign({}, args, { src: path.join(dir, link), dest: path.join(staticDir, fileLinks[link]) });
-        let lcmd = cmd(targs);
+        let lcmd = isTask ? cmd : cmd(targs);
         let promises = [];
         console.log(gen + "Running " + lcmd + "...");
-        promises.push(exec(lcmd, (err, stdout, stderr) => {
+        if (isTask) {
+          taskrunner.runTask(lcmd, targs);
+        } else {
+          promises.push(exec(lcmd, (err, stdout, stderr) => {
+            if (stdout) console.log(stdout);
+            if (stderr) console.log(stderr);
+          }));
+        }
+      }
+      promises = Promise.all(promises).then(() => {
+        if (global.athanor.wss) global.athanor.wss.broadcast(JSON.stringify({ type: "asset_changed", payload: filename }));
+        console.log("Done.");
+      });
+    } else {
+      let lcmd = isTask ? cmd : cmd(args);
+      console.log(gen + "Running " + lcmd + "...");
+      if (isTask) {
+        taskrunner.runTask(lcmd, args);
+        if (global.athanor.wss) global.athanor.wss.broadcast(JSON.stringify({ type: "asset_changed", payload: filename }));
+      } else {
+        exec(lcmd, (err, stdout, stderr) => {
           if (stdout) console.log(stdout);
           if (stderr) console.log(stderr);
-        }));
-        promises = Promise.all(promises).then(() => {
           if (global.athanor.wss) global.athanor.wss.broadcast(JSON.stringify({ type: "asset_changed", payload: filename }));
           console.log("Done.");
         });
       }
-    } else {
-      let lcmd = cmd(args);
-      console.log(gen + "Running " + lcmd + "...");
-      exec(lcmd, (err, stdout, stderr) => {
-        if (stdout) console.log(stdout);
-        if (stderr) console.log(stderr);
-        if (global.athanor.wss) global.athanor.wss.broadcast(JSON.stringify({ type: "asset_changed", payload: filename }));
-        console.log("Done.");
-      });
     }
   };
 };
