@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+    {% for item in dirs %}
+      <div>
+        <a href="/{{ item }}">{{ item }}</a>
+      </div>
+    {% endfor %}
+  </body>
+</html>

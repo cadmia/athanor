@@ -1,0 +1,16 @@
+{
+  "name": "static-prototype-env",
+  "version": "1.0.0",
+  "description": "Environment for Static Prototyping",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Nicholas Guarino <ndguarino@cadmia.io>",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.3",
+    "lodash": "^4.17.10",
+    "nunjucks": "^3.1.3"
+  }
+}
