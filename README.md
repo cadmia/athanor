@@ -27,9 +27,11 @@ Configuration is simple, but may seem a bit complex. This is a list of options.
 
 Watched build can work in one of two ways. If files is omitted, build will only be run once. Elsewise, it will be run once per entry.
 
-Three variables will be injected when build is run: `${changed}`, `${src}`, and `${dest}`. `${changed}` is the file that was changed. `${src}` is the input file. `${dest}` is the output file.
+Four variables will be injected when build is run: `${dir}` `${changed}`, `${src}`, and `${dest}`. `${changed}` is the file that was changed. `${src}` is the input file. `${dest}` is the output file, ${dir} is the directory being watched.
 
 The watch step will watch an entire directory, including any newly created files or deleted ones. It will ignore any files with a tilde in the name.
+
+You can also use `<% ... %>` to run arbitrary code (e.g. replacements) inside the build step
 
 ### Example configurations
 

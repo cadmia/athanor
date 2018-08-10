@@ -26,10 +26,18 @@ const genFileWatcher = (dir, buildCmd, fileLinks) => {
     const fileChanged = path.relative(process.cwd(), filename);
     const gen = "[" + dir.toUpperCase() + "]: ";
     console.log(gen + "File " + fileChanged + " changed (" + eventType + ").");
-    let cmd = buildCmd.replace(/\${changed}/, path.join(dir, filename));
+    let cmd = _.template(buildCmd);
+    let args = {
+      changed: filename,
+      dir: dir,
+      src: path.join(dir, filename),
+      dest: path.join(staticDir, filename)
+    }
+
     if (fileLinks) {
       for (var link in fileLinks) {
-        let lcmd = cmd.replace(/\${src}/, path.join(dir, link)).replace(/\${dest}/, path.join(staticDir, fileLinks[link]));
+        let targs = Object.assign({}, args, { src: path.join(dir, link), dest: path.join(staticDir, fileLinks[link]) });
+        let lcmd = cmd(targs);
         console.log(gen + "Running " + lcmd + "...");
         exec(lcmd, (err, stdout, stderr) => {
           if (stdout) console.log(stdout);
@@ -37,13 +45,14 @@ const genFileWatcher = (dir, buildCmd, fileLinks) => {
         });
       }
     } else {
-      console.log(gen + "Running " + cmd + "...");
-      exec(cmd, (err, stdout, stderr) => {
+      let lcmd = cmd(args);
+      console.log(gen + "Running " + lcmd + "...");
+      exec(lcmd, (err, stdout, stderr) => {
         if (stdout) console.log(stdout);
         if (stderr) console.log(stderr);
+        console.log("Done.");
       });
     }
-    console.log("Done.");
   };
 };
 
