@@ -59,11 +59,17 @@ const buildWatchStructure = () => {
   // Build new watchers
   if (watch) {
     for (var watchdef of watch) {
-      let dir = watchdef.dir;
+      let dirs = watchdef.dir;
       let build = watchdef.build;
       let files = watchdef.files;
 
-      watchers.push(fs.watch(path.join(__dirname, dir), { persistent: true, recursive: true }, _.throttle(genFileWatcher(dir, build, files), 1000)));
+      if (!Array.isArray(dirs)) {
+        dirs = [dirs];
+      }
+
+      for (let dir of dirs) {
+        watchers.push(fs.watch(path.join(__dirname, dir), { persistent: true, recursive: true }, _.throttle(genFileWatcher(dir, build, files), 1000)));
+      }
     }
   }
 };
