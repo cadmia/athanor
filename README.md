@@ -16,12 +16,14 @@ Configuration is simple, but may seem a bit complex. This is a list of options.
 | Name               | Type             | Description                                    |
 | ------------------ | ---------------- | ---------------------------------------------- |
 | port               | int              | Port to run webserver on (default 9876)        |
+| wsport             | int              | Port to run websocket server on (def 42496)    |
 | staticDir          | string           | Directory to serve static files from/build to  |
 | templateDir        | string           | Directory to serve/search templates from       |
 | watch              | array            | List of files/directories to watch for changes |
 | watch[].dir        | string/arr (req) | Directory (or path to file) to watch           |
 | watch[].build      | string (req)     | Build command (see Build)                      |
 | watch[].files      | object           | Optional list of input=>output files           |
+| watch[].livereload | boolean          | Enables livereload on builds                   |
 
 ### Build
 

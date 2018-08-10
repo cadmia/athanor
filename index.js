@@ -4,22 +4,37 @@ const fs = require('fs');
 const path = require('path');
 const exec = require('child_process').exec;
 const _ = require('lodash');
+const WebSocket = require("ws");
 
 const readConfig = () => {
   return JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json')));
 }
 
-const app = express();
 var config = readConfig();
-var watchers = []; // Who watches the watchers? I do
-
 const port = process.env.PORT || config.port || 9876;
+const wsport = process.env.WSPORT || config.wsport || 42496;
 const templateDir = config.templateDir || "templates";
 const staticDir = config.staticDir || "static";
 
+const app = express();
+const wss = new WebSocket.Server({ port: wsport });
+wss.broadcast = (data) => {
+  wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(data);
+    }
+  });
+};
+
+var watchers = []; // Who watches the watchers? I do
+
 console.log(config);
 
-const genFileWatcher = (dir, buildCmd, fileLinks) => {
+const genFileWatcher = (dir, cfg) => {
+  const buildCmd = cfg.build;
+  const fileLinks = cfg.files;
+  const reload = cfg.livereload;
+
   return (eventType, filename) => {
     if (filename.indexOf("~") !== -1) return;
 
@@ -38,10 +53,15 @@ const genFileWatcher = (dir, buildCmd, fileLinks) => {
       for (var link in fileLinks) {
         let targs = Object.assign({}, args, { src: path.join(dir, link), dest: path.join(staticDir, fileLinks[link]) });
         let lcmd = cmd(targs);
+        let promises = [];
         console.log(gen + "Running " + lcmd + "...");
-        exec(lcmd, (err, stdout, stderr) => {
+        promises.push(exec(lcmd, (err, stdout, stderr) => {
           if (stdout) console.log(stdout);
           if (stderr) console.log(stderr);
+        }));
+        promises = Promise.all(promises).then(() => {
+          wss.broadcast(JSON.stringify({ type: "asset_changed", payload: filename }));
+          console.log("Done.");
         });
       }
     } else {
@@ -50,6 +70,7 @@ const genFileWatcher = (dir, buildCmd, fileLinks) => {
       exec(lcmd, (err, stdout, stderr) => {
         if (stdout) console.log(stdout);
         if (stderr) console.log(stderr);
+        wss.broadcast(JSON.stringify({ type: "asset_changed", payload: filename }));
         console.log("Done.");
       });
     }
@@ -69,15 +90,13 @@ const buildWatchStructure = () => {
   if (watch) {
     for (var watchdef of watch) {
       let dirs = watchdef.dir;
-      let build = watchdef.build;
-      let files = watchdef.files;
 
       if (!Array.isArray(dirs)) {
         dirs = [dirs];
       }
 
       for (let dir of dirs) {
-        watchers.push(fs.watch(path.join(__dirname, dir), { persistent: true, recursive: true }, _.throttle(genFileWatcher(dir, build, files), 1000)));
+        watchers.push(fs.watch(path.join(__dirname, dir), { persistent: true, recursive: true }, _.throttle(genFileWatcher(dir, watchdef), 1000)));
       }
     }
   }
@@ -96,8 +115,33 @@ nunjucks.configure(templateDir, {
   noCache: true,
   express: app
 });
+fs.watch(path.join(__dirname, templateDir), { persistent: true, recursive: true}, (eventType, fileName) => {
+  if (fileName.indexOf("~") !== -1) return;
+  wss.broadcast(JSON.stringify({ type: "template_changed", payload: fileName }));
+});
 
 app.use(express.static(path.join(__dirname, staticDir)));
+
+const injectWSCode = (code) => {
+  const inject = `<script>
+    var ws = new WebSocket('ws://localhost:${wsport}');
+    ws.onmessage = function(event) {
+      var data = JSON.parse(event.data);
+      if (
+            (data.type === "asset_changed") ||
+            (data.type === "template_changed" && (window.location.pathname === "/" || window.location.pathname === "/" + data.payload))
+      ) {
+        window.location.reload(true);
+      }
+
+    }
+  </script>`;
+
+  if (code.indexOf('<head>') !== -1) {
+    return code.replace(/<head>/, "<head>" + inject);
+  }
+  return code + inject;
+};
 
 const handleRoute = (route, res) => {
   route = path.join(__dirname, templateDir, route);
@@ -131,14 +175,14 @@ const handleRoute = (route, res) => {
     if (err) {
       res.status(500).send(err);
     } else {
-      res.send(ret);
+      res.send(injectWSCode(ret));
     }
   });
 }
 
 app.get('/', (req, res) => {
   let contents = fs.readFileSync(path.join(__dirname, "inc", "dir.njk"));
-  res.send(nunjucks.renderString(contents.toString(), { dirs: fs.readdirSync(path.join(__dirname, templateDir)) }));
+  res.send(injectWSCode(nunjucks.renderString(contents.toString(), { dirs: fs.readdirSync(path.join(__dirname, templateDir)) })));
 });
 
 app.get('*', (req, res) => {
