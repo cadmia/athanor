@@ -17,6 +17,7 @@ global.athanor.port = process.env.PORT || athanor.config.port || 9876;
 global.athanor.wsport = process.env.WSPORT || athanor.config.wsport || 42496;
 global.athanor.templateDir = athanor.config.templateDir || "templates";
 global.athanor.staticDir = athanor.config.staticDir || "static";
+global.athanor.buildDir = athanor.config.buildDir || "build";
 
 const checkargs = () => {
   let arglist = process.argv;
